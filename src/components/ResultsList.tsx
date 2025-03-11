@@ -22,9 +22,10 @@ export interface SlideData {
 
 interface ResultsListProps {
   results: SlideData[];
+  onDownloadCSV: () => void;
 }
 
-const ResultsList: React.FC<ResultsListProps> = ({ results }) => {
+const ResultsList: React.FC<ResultsListProps> = ({ results, onDownloadCSV }) => {
   const [expandedItem, setExpandedItem] = useState<number | null>(null);
 
   const toggleExpand = (index: number) => {
@@ -44,6 +45,17 @@ const ResultsList: React.FC<ResultsListProps> = ({ results }) => {
 
   return (
     <div className="w-full animate-fade-in space-y-6">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-lg font-medium">Analysis Results</h2>
+        <button
+          onClick={onDownloadCSV}
+          className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
+        >
+          <Download className="h-4 w-4" />
+          <span>Download CSV</span>
+        </button>
+      </div>
+
       <div className="space-y-4">
         {results.map((result, index) => (
           <div key={`${result.fileName}-${result.pageNumber}-${index}`} className="bg-white rounded-lg shadow-sm border p-4 space-y-3">

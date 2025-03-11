@@ -70,6 +70,7 @@ const Index = () => {
     try {
       setIsProcessing(true);
       setProgress(0);
+      setResults([]); // Clear previous results
       
       localStorage.setItem('openai-api-key', apiKey);
       
@@ -80,11 +81,16 @@ const Index = () => {
         (progressValue) => setProgress(progressValue)
       );
       
-      setResults(processedResults);
-      toast.success(`Successfully processed ${files.length} file(s)`);
+      if (processedResults && processedResults.length > 0) {
+        setResults(processedResults);
+        toast.success(`Successfully processed ${files.length} file(s)`);
+      } else {
+        toast.error('No results were generated from the files');
+      }
     } catch (error) {
       console.error('Error processing files:', error);
       toast.error(`An error occurred while processing files: ${error instanceof Error ? error.message : String(error)}`);
+      setResults([]); // Clear results on error
     } finally {
       setIsProcessing(false);
       setProgress(null);
@@ -92,13 +98,18 @@ const Index = () => {
   };
 
   const handleDownloadCSV = () => {
-    if (results.length === 0) {
+    if (!results || results.length === 0) {
       toast.error('No results available to download');
       return;
     }
     
-    exportToCSV(results);
-    toast.success('CSV file downloaded successfully');
+    try {
+      exportToCSV(results);
+      toast.success('CSV file downloaded successfully');
+    } catch (error) {
+      console.error('Error downloading CSV:', error);
+      toast.error('Failed to download CSV file');
+    }
   };
 
   const handleApiKeySubmit = (e: React.FormEvent) => {
@@ -270,7 +281,6 @@ const Index = () => {
               
               <ResultsList 
                 results={results}
-                onDownloadCSV={handleDownloadCSV}
               />
             </div>
           )}
