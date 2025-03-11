@@ -1,0 +1,102 @@
+{
+  "content_taxonomy": [
+    "Access",
+    "Availability",
+    "Brand Awareness and News",
+    "Brand Experience",
+    "Clinical Trial and Study Info",
+    "Clinical Trial Diversity",
+    "Clinical Trial Enrollment",
+    "Colloquialism",
+    "Confirmation",
+    "Contractual Terms",
+    "Corporate News",
+    "Diagnosis",
+    "Disease Awareness",
+    "Dispense As Written",
+    "Dosing",
+    "Efficacy",
+    "ePermission or Consent or Unsubscribe",
+    "Epidemiology",
+    "Invitation to Other MCM",
+    "Mechanism of Action",
+    "Notations",
+    "Pathology",
+    "Patient Stories",
+    "Patient Type",
+    "Pfizer Internal Use Only",
+    "Product Form Strength Function",
+    "Product Label Info",
+    "Real World Evidence",
+    "Resources HCP",
+    "Resources Patient",
+    "Safety",
+    "Sample",
+    "Special Offers and Discounts",
+    "Storage and Handling",
+    "Summary Messages",
+    "Treatment Options",
+    "Unmet Need"
+  ],
+  "medical_affairs_taxonomy": {
+    "ContentType": [
+      "Scientific Platform",
+      "Key Scientific Messages (KSMs)",
+      "Medical Information Response (MIRs)",
+      "Plain Language Summary (PLS)",
+      "Clinical Trial Results Deck",
+      "Mechanism of Action (MOA) Deck",
+      "Real-World Evidence (RWE) Deck",
+      "Health Economics & Outcomes Research (HEOR) Deck",
+      "Advisory Board Deck",
+      "Regulatory & Labeling Deck"
+    ],
+    "ClinicalTrialRelevance": [
+      "Phase 1 Clinical Trial Data",
+      "Phase 2 Clinical Trial Data",
+      "Phase 3 Clinical Trial Data",
+      "Phase 4/Post-Marketing Surveillance Data",
+      "Head-to-Head Trials",
+      "Biomarker/Companion Diagnostics Evidence",
+      "Meta-Analyses & Systematic Reviews"
+    ],
+    "DiseaseAndTherapeuticArea": [
+      "Oncology",
+      "Cardiology",
+      "Immunology",
+      "Neurology",
+      "Rare Diseases",
+      "Non-Small Cell Lung Cancer",
+      "Crohn's Disease",
+      "Multiple Sclerosis"
+    ],
+    "IntendedAudience": [
+      "Internal Medical Affairs",
+      "Healthcare Professionals (HCPs)",
+      "Payers & Market Access Teams",
+      "Regulatory & Compliance Teams",
+      "Patients & Advocacy Groups"
+    ],
+    "KeyScientificMessaging": [
+      "Efficacy Data",
+      "Safety & Tolerability Profile",
+      "Dosing & Administration Guidelines",
+      "Real-World Clinical Outcomes",
+      "Unmet Medical Need & Differentiation"
+    ],
+    "DistributionAndAccessControl": [
+      "Veeva CRM & MSL Tools",
+      "Medical Affairs Internal Repository",
+      "Congress Presentations",
+      "HCP Portals & Educational Websites",
+      "Advisory Board Meetings"
+    ],
+    "ComplianceAndRegulatoryConsiderations": [
+      "Medical Affairs Approved",
+      "Internal Use Only",
+      "Market-Specific Adaptations (Regional Variations)",
+      "Fair Balance Statement",
+      "Pre-Approval vs. Post-Approval Use"
+    ]
+  }
+} 

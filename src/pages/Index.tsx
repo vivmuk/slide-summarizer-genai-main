@@ -59,14 +59,20 @@ const Index = () => {
   };
 
   useEffect(() => {
-    // Load taxonomy terms from JSON file
-    fetch('/taxonomy_terms.json')
-      .then(response => response.json())
-      .then(data => setTaxonomyTerms(data))
-      .catch(error => {
-        console.error('Error loading taxonomy terms:', error);
-        toast.error('Failed to load taxonomy terms');
-      });
+    const loadTaxonomyTerms = async () => {
+      try {
+        const response = await fetch('/data/taxonomy_terms.json');
+        if (!response.ok) {
+          throw new Error('Failed to load taxonomy terms');
+        }
+        const terms = await response.json();
+        setTaxonomyTerms(terms);
+      } catch (error) {
+        toast.error('Failed to load taxonomy terms. Please refresh the page.');
+      }
+    };
+
+    loadTaxonomyTerms();
 
     const savedApiKey = localStorage.getItem('openai-api-key');
     if (savedApiKey) {
