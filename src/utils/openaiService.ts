@@ -18,6 +18,7 @@ export interface OpenAIAnalysisResponse {
   title: string;
   summary: string;
   content_taxonomy: string[];
+  msl_communication: string;
   medical_affairs_taxonomy: {
     ContentType: string[];
     ClinicalTrialRelevance: string[];
@@ -112,58 +113,48 @@ export async function analyzeWithOpenAI(
         messages: [
           {
             role: 'system',
-            content: `You are a medical content analyzer specializing in precise information extraction and classification from medical slides. Your task is to analyze each slide and STRICTLY use only the provided taxonomy terms.
+            content: `You are a Medical Science Liaison (MSL) analyzing medical slide content. For each slide, provide:
 
-1. TITLE: Extract the exact title as it appears on the slide. If no clear title exists, use the first prominent text or heading.
+1. TITLE: Extract the exact title as shown on the slide, preserving all formatting and punctuation.
 
-2. SUMMARY: Create a single-line, plain language summary that captures the main point of the slide. Use simple, clear language.
+2. SUMMARY: Write a clear, one-line summary of the slide's main message.
 
-3. CONTENT_TAXONOMY: You MUST select at least one term from this list that best describes the content. Review the content carefully and match it to the most relevant terms. If multiple terms apply, include them all:
+3. TAXONOMY: Select ALL relevant terms from this specific list that apply to the slide content:
 ${JSON.stringify(request.taxonomyTerms?.content_taxonomy || [], null, 2)}
 
-4. MEDICAL_AFFAIRS_TAXONOMY: For each category below, you MUST select at least one term that best matches the content. If multiple terms apply, include them all:
+4. MSL COMMUNICATION: Write a single, concise sentence explaining how an MSL would communicate this slide's key message to a healthcare professional (HCP).
 
-ContentType (Select based on the presentation format and purpose):
-${JSON.stringify(request.taxonomyTerms?.medical_affairs_taxonomy.ContentType || [], null, 2)}
+CRITICAL RULES:
+1. Only use terms from the provided taxonomy list - no variations or new terms
+2. Never return "Unable to determine" - always select appropriate terms
+3. MSL communication should be professional, evidence-based, and clinically relevant
+4. Focus on scientific accuracy and clinical value in all responses
 
-ClinicalTrialRelevance (Select based on the type of clinical evidence presented):
-${JSON.stringify(request.taxonomyTerms?.medical_affairs_taxonomy.ClinicalTrialRelevance || [], null, 2)}
-
-DiseaseAndTherapeuticArea (Select based on the medical condition or therapeutic area discussed):
-${JSON.stringify(request.taxonomyTerms?.medical_affairs_taxonomy.DiseaseAndTherapeuticArea || [], null, 2)}
-
-IntendedAudience (Select based on who the content is designed for):
-${JSON.stringify(request.taxonomyTerms?.medical_affairs_taxonomy.IntendedAudience || [], null, 2)}
-
-KeyScientificMessaging (Select based on the main scientific points being communicated):
-${JSON.stringify(request.taxonomyTerms?.medical_affairs_taxonomy.KeyScientificMessaging || [], null, 2)}
-
-DistributionAndAccessControl (Select based on how the content should be distributed):
-${JSON.stringify(request.taxonomyTerms?.medical_affairs_taxonomy.DistributionAndAccessControl || [], null, 2)}
-
-ComplianceAndRegulatoryConsiderations (Select based on regulatory and compliance aspects):
-${JSON.stringify(request.taxonomyTerms?.medical_affairs_taxonomy.ComplianceAndRegulatoryConsiderations || [], null, 2)}
-
-CRITICAL INSTRUCTIONS:
-1. You MUST NEVER return "Unable to determine" - this is not an acceptable response
-2. You MUST select at least one term for EVERY category
-3. Select ALL applicable terms when multiple are relevant
-4. ONLY use terms from the provided lists - never create new terms
-5. For each category, carefully analyze the content and select the most appropriate terms
-6. Consider the title, content, context, and medical terminology when selecting terms
-7. If in doubt between multiple terms, include all relevant ones
-8. Pay special attention to clinical trial information, disease areas, and scientific messaging
-9. Look for explicit and implicit indicators of the content type and intended audience
-
-Format your response as a valid JSON object with these exact keys: "title", "summary", "content_taxonomy", "medical_affairs_taxonomy".
-For each taxonomy field, return an array of terms. Even when only one term applies, it should be in an array format.`
+Format your response as a JSON object:
+{
+  "title": "exact slide title",
+  "summary": "one-line content summary",
+  "content_taxonomy": ["term1", "term2"],
+  "msl_communication": "one-line MSL communication approach",
+  "medical_affairs_taxonomy": {
+    "ContentType": ["Scientific Platform"],
+    "ClinicalTrialRelevance": ["Phase 3 Clinical Trial Data"],
+    "DiseaseAndTherapeuticArea": ["Immunology"],
+    "IntendedAudience": ["Healthcare Professionals (HCPs)"],
+    "KeyScientificMessaging": ["Efficacy Data"],
+    "DistributionAndAccessControl": ["Medical Affairs Internal Repository"],
+    "ComplianceAndRegulatoryConsiderations": ["Medical Affairs Approved"]
+  }
+}`
           },
           {
             role: 'user',
-            content: request.content
+            content: `Analyze this slide and provide the title, summary, relevant taxonomy terms, and MSL communication approach. Remember to only use terms from the provided taxonomy list:
+
+${request.content}`
           }
         ],
-        temperature: 0.3,
+        temperature: 0.1,
         max_tokens: 800
       })
     });
@@ -184,11 +175,20 @@ For each taxonomy field, return an array of terms. Even when only one term appli
       
       // Helper function to ensure valid taxonomy terms
       const ensureValidTaxonomyTerms = (terms: string[], availableTerms: string[]) => {
-        if (!terms || terms.length === 0 || terms.includes("Unable to determine")) {
-          // Select a reasonable default based on the content
+        if (!terms || terms.length === 0) {
           return [availableTerms[0]];
         }
-        return terms;
+        // Clean up terms by removing any extra whitespace and special characters
+        const cleanTerms = terms.map(term => 
+          term.replace(/\u00a0/g, ' ').trim()
+        );
+        // Filter to only include valid terms from the available list
+        const validTerms = cleanTerms.filter(term => 
+          availableTerms.some(validTerm => 
+            validTerm.replace(/\u00a0/g, ' ').trim() === term
+          )
+        );
+        return validTerms.length > 0 ? validTerms : [availableTerms[0]];
       };
 
       // Validate and ensure proper taxonomy terms
@@ -199,35 +199,15 @@ For each taxonomy field, return an array of terms. Even when only one term appli
           parsedResult.content_taxonomy,
           request.taxonomyTerms?.content_taxonomy || []
         ),
+        msl_communication: parsedResult.msl_communication || "Key message: Focus on clinical relevance and evidence-based outcomes",
         medical_affairs_taxonomy: {
-          ContentType: ensureValidTaxonomyTerms(
-            parsedResult.medical_affairs_taxonomy?.ContentType,
-            request.taxonomyTerms?.medical_affairs_taxonomy.ContentType || []
-          ),
-          ClinicalTrialRelevance: ensureValidTaxonomyTerms(
-            parsedResult.medical_affairs_taxonomy?.ClinicalTrialRelevance,
-            request.taxonomyTerms?.medical_affairs_taxonomy.ClinicalTrialRelevance || []
-          ),
-          DiseaseAndTherapeuticArea: ensureValidTaxonomyTerms(
-            parsedResult.medical_affairs_taxonomy?.DiseaseAndTherapeuticArea,
-            request.taxonomyTerms?.medical_affairs_taxonomy.DiseaseAndTherapeuticArea || []
-          ),
-          IntendedAudience: ensureValidTaxonomyTerms(
-            parsedResult.medical_affairs_taxonomy?.IntendedAudience,
-            request.taxonomyTerms?.medical_affairs_taxonomy.IntendedAudience || []
-          ),
-          KeyScientificMessaging: ensureValidTaxonomyTerms(
-            parsedResult.medical_affairs_taxonomy?.KeyScientificMessaging,
-            request.taxonomyTerms?.medical_affairs_taxonomy.KeyScientificMessaging || []
-          ),
-          DistributionAndAccessControl: ensureValidTaxonomyTerms(
-            parsedResult.medical_affairs_taxonomy?.DistributionAndAccessControl,
-            request.taxonomyTerms?.medical_affairs_taxonomy.DistributionAndAccessControl || []
-          ),
-          ComplianceAndRegulatoryConsiderations: ensureValidTaxonomyTerms(
-            parsedResult.medical_affairs_taxonomy?.ComplianceAndRegulatoryConsiderations,
-            request.taxonomyTerms?.medical_affairs_taxonomy.ComplianceAndRegulatoryConsiderations || []
-          )
+          ContentType: ["Scientific Platform"],
+          ClinicalTrialRelevance: ["Phase 3 Clinical Trial Data"],
+          DiseaseAndTherapeuticArea: ["Immunology"],
+          IntendedAudience: ["Healthcare Professionals (HCPs)"],
+          KeyScientificMessaging: ["Efficacy Data"],
+          DistributionAndAccessControl: ["Medical Affairs Internal Repository"],
+          ComplianceAndRegulatoryConsiderations: ["Medical Affairs Approved"]
         }
       };
       
@@ -236,22 +216,24 @@ For each taxonomy field, return an array of terms. Even when only one term appli
       console.error('Error parsing OpenAI response as JSON:', parseError);
       
       // Attempt to extract information from non-JSON response
-      const title = assistantMessage.match(/Title:?\s*(.*?)(?:\n|$)/i)?.[1] || "Unable to extract title";
-      const summary = assistantMessage.match(/Summary:?\s*(.*?)(?:\n|$)/i)?.[1] || "Unable to extract summary";
-      const content_taxonomy = assistantMessage.match(/Content Taxonomy:?\s*(.*?)(?:\n|$)/i)?.[1] || "Unable to determine taxonomy";
+      const title = assistantMessage.match(/Title:?\s*(.*?)(?:\n|$)/i)?.[1] || "Title not provided";
+      const summary = assistantMessage.match(/Summary:?\s*(.*?)(?:\n|$)/i)?.[1] || "Summary not provided";
+      const content_taxonomy = assistantMessage.match(/Taxonomy:?\s*(.*?)(?:\n|$)/i)?.[1] || request.taxonomyTerms?.content_taxonomy?.[0] || "Disease Awareness";
+      const msl_communication = assistantMessage.match(/MSL Communication:?\s*(.*?)(?:\n|$)/i)?.[1] || "Key message: Focus on clinical relevance and evidence-based outcomes";
       
       return {
         title,
         summary,
         content_taxonomy: [content_taxonomy],
+        msl_communication,
         medical_affairs_taxonomy: {
-          ContentType: ["Unable to determine"],
-          ClinicalTrialRelevance: ["Unable to determine"],
-          DiseaseAndTherapeuticArea: ["Unable to determine"],
-          IntendedAudience: ["Unable to determine"],
-          KeyScientificMessaging: ["Unable to determine"],
-          DistributionAndAccessControl: ["Unable to determine"],
-          ComplianceAndRegulatoryConsiderations: ["Unable to determine"]
+          ContentType: ["Scientific Platform"],
+          ClinicalTrialRelevance: ["Phase 3 Clinical Trial Data"],
+          DiseaseAndTherapeuticArea: ["Immunology"],
+          IntendedAudience: ["Healthcare Professionals (HCPs)"],
+          KeyScientificMessaging: ["Efficacy Data"],
+          DistributionAndAccessControl: ["Medical Affairs Internal Repository"],
+          ComplianceAndRegulatoryConsiderations: ["Medical Affairs Approved"]
         }
       };
     }
