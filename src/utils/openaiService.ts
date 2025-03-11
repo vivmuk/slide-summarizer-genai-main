@@ -5,15 +5,15 @@ export interface OpenAIAnalysisRequest {
 export interface OpenAIAnalysisResponse {
   title: string;
   summary: string;
-  content_taxonomy: string;
+  content_taxonomy: string[];
   medical_affairs_taxonomy: {
-    ContentType: string;
-    ClinicalTrialRelevance: string;
-    DiseaseAndTherapeuticArea: string;
-    IntendedAudience: string;
-    KeyScientificMessaging: string;
-    DistributionAndAccessControl: string;
-    ComplianceAndRegulatoryConsiderations: string;
+    ContentType: string[];
+    ClinicalTrialRelevance: string[];
+    DiseaseAndTherapeuticArea: string[];
+    IntendedAudience: string[];
+    KeyScientificMessaging: string[];
+    DistributionAndAccessControl: string[];
+    ComplianceAndRegulatoryConsiderations: string[];
   };
 }
 
@@ -100,27 +100,59 @@ export async function analyzeWithOpenAI(
         messages: [
           {
             role: 'system',
-            content: `You are a medical content analyzer specializing in precise information extraction from medical slides. For each slide:
+            content: `You are a medical content analyzer specializing in precise information extraction and classification from medical slides. Your task is to analyze each slide and STRICTLY use only the provided taxonomy terms.
 
 1. TITLE: Extract the exact title as it appears on the slide. If no clear title exists, use the first prominent text or heading.
 
 2. SUMMARY: Create a single-line, plain language summary that captures the main point of the slide. Use simple, clear language.
 
-3. CONTENT_TAXONOMY: Select the SINGLE most appropriate term from this list:
+3. CONTENT_TAXONOMY: Select ALL applicable terms from this list that describe the content types present in the slide. You MUST use only terms from this list:
 [Access, Availability, Brand Awareness and News, Brand Experience, Clinical Trial and Study Info, Clinical Trial Diversity, Clinical Trial Enrollment, Colloquialism, Confirmation, Contractual Terms, Corporate News, Diagnosis, Disease Awareness, Dispense As Written, Dosing, Efficacy, ePermission or Consent or Unsubscribe, Epidemiology, Invitation to Other MCM, Mechanism of Action, Notations, Pathology, Patient Stories, Patient Type, Pfizer Internal Use Only, Product Form Strength Function, Product Label Info, Real World Evidence, Resources HCP, Resources Patient, Safety, Sample, Special Offers and Discounts, Storage and Handling, Summary Messages, Treatment Options, Unmet Need]
 
-4. MEDICAL_AFFAIRS_TAXONOMY: Tag the slide with the most relevant term from EACH of these categories:
-- ContentType: [Scientific Platform, Key Scientific Messages (KSMs), Medical Information Response (MIRs), Plain Language Summary (PLS), Clinical Trial Results Deck, Mechanism of Action (MOA) Deck, Real-World Evidence (RWE) Deck, Health Economics & Outcomes Research (HEOR) Deck, Advisory Board Deck, Regulatory & Labeling Deck]
-- ClinicalTrialRelevance: [Phase 1 Clinical Trial Data, Phase 2 Clinical Trial Data, Phase 3 Clinical Trial Data, Phase 4/Post-Marketing Surveillance Data, Head-to-Head Trials, Biomarker/Companion Diagnostics Evidence, Meta-Analyses & Systematic Reviews]
-- DiseaseAndTherapeuticArea: [Oncology, Cardiology, Immunology, Neurology, Rare Diseases, Non-Small Cell Lung Cancer, Crohn's Disease, Multiple Sclerosis]
-- IntendedAudience: [Internal Medical Affairs, Healthcare Professionals (HCPs), Payers & Market Access Teams, Regulatory & Compliance Teams, Patients & Advocacy Groups]
-- KeyScientificMessaging: [Efficacy Data, Safety & Tolerability Profile, Dosing & Administration Guidelines, Real-World Clinical Outcomes, Unmet Medical Need & Differentiation]
-- DistributionAndAccessControl: [Veeva CRM & MSL Tools, Medical Affairs Internal Repository, Congress Presentations, HCP Portals & Educational Websites, Advisory Board Meetings]
-- ComplianceAndRegulatoryConsiderations: [Medical Affairs Approved, Internal Use Only, Market-Specific Adaptations (Regional Variations), Fair Balance Statement, Pre-Approval vs. Post-Approval Use]
+4. MEDICAL_AFFAIRS_TAXONOMY: For each category below, select ALL applicable terms from the provided options that apply to the slide. You MUST only use terms from these lists:
+
+ContentType - Select based on all purposes the slide serves:
+[Scientific Platform, Key Scientific Messages (KSMs), Medical Information Response (MIRs), Plain Language Summary (PLS), Clinical Trial Results Deck, Mechanism of Action (MOA) Deck, Real-World Evidence (RWE) Deck, Health Economics & Outcomes Research (HEOR) Deck, Advisory Board Deck, Regulatory & Labeling Deck]
+
+ClinicalTrialRelevance - Select all types of clinical evidence presented:
+[Phase 1 Clinical Trial Data, Phase 2 Clinical Trial Data, Phase 3 Clinical Trial Data, Phase 4/Post-Marketing Surveillance Data, Head-to-Head Trials, Biomarker/Companion Diagnostics Evidence, Meta-Analyses & Systematic Reviews]
+
+DiseaseAndTherapeuticArea - Select all relevant medical conditions:
+[Oncology, Cardiology, Immunology, Neurology, Rare Diseases, Non-Small Cell Lung Cancer, Crohn's Disease, Multiple Sclerosis]
+
+IntendedAudience - Select all target audiences:
+[Internal Medical Affairs, Healthcare Professionals (HCPs), Payers & Market Access Teams, Regulatory & Compliance Teams, Patients & Advocacy Groups]
+
+KeyScientificMessaging - Select all scientific messages present:
+[Efficacy Data, Safety & Tolerability Profile, Dosing & Administration Guidelines, Real-World Clinical Outcomes, Unmet Medical Need & Differentiation]
+
+DistributionAndAccessControl - Select all appropriate distribution channels:
+[Veeva CRM & MSL Tools, Medical Affairs Internal Repository, Congress Presentations, HCP Portals & Educational Websites, Advisory Board Meetings]
+
+ComplianceAndRegulatoryConsiderations - Select all applicable compliance statuses:
+[Medical Affairs Approved, Internal Use Only, Market-Specific Adaptations (Regional Variations), Fair Balance Statement, Pre-Approval vs. Post-Approval Use]
+
+IMPORTANT:
+- You MUST select at least one term for each category
+- You MAY select multiple terms when appropriate
+- Only use terms from the provided lists
+- Never return "Unable to determine" or create new terms
+- Consider all aspects of the slide's content when selecting terms
+- If uncertain about a category, select the most relevant term(s) based on available content
 
 Format your response as a valid JSON object with these exact keys: "title", "summary", "content_taxonomy", "medical_affairs_taxonomy".
-For medical_affairs_taxonomy, include all seven subcategories with their selected terms.
-Be precise and concise. If you cannot determine any element with confidence, make the best informed guess based on the available content.`
+For each taxonomy field, return an array of terms. Even when only one term applies, it should be in an array format.
+Example format:
+{
+  "title": "Example Title",
+  "summary": "Example summary",
+  "content_taxonomy": ["Term1", "Term2"],
+  "medical_affairs_taxonomy": {
+    "ContentType": ["Term1", "Term2"],
+    "ClinicalTrialRelevance": ["Term1"],
+    ...
+  }
+}`
           },
           {
             role: 'user',
@@ -149,15 +181,15 @@ Be precise and concise. If you cannot determine any element with confidence, mak
       return {
         title: parsedResult.title || "Unable to extract title",
         summary: parsedResult.summary || "Unable to extract summary",
-        content_taxonomy: parsedResult.content_taxonomy || "Unable to determine taxonomy",
+        content_taxonomy: parsedResult.content_taxonomy || ["Unable to determine taxonomy"],
         medical_affairs_taxonomy: {
-          ContentType: parsedResult.medical_affairs_taxonomy?.ContentType || "Unable to determine",
-          ClinicalTrialRelevance: parsedResult.medical_affairs_taxonomy?.ClinicalTrialRelevance || "Unable to determine",
-          DiseaseAndTherapeuticArea: parsedResult.medical_affairs_taxonomy?.DiseaseAndTherapeuticArea || "Unable to determine",
-          IntendedAudience: parsedResult.medical_affairs_taxonomy?.IntendedAudience || "Unable to determine",
-          KeyScientificMessaging: parsedResult.medical_affairs_taxonomy?.KeyScientificMessaging || "Unable to determine",
-          DistributionAndAccessControl: parsedResult.medical_affairs_taxonomy?.DistributionAndAccessControl || "Unable to determine",
-          ComplianceAndRegulatoryConsiderations: parsedResult.medical_affairs_taxonomy?.ComplianceAndRegulatoryConsiderations || "Unable to determine"
+          ContentType: parsedResult.medical_affairs_taxonomy?.ContentType || ["Unable to determine"],
+          ClinicalTrialRelevance: parsedResult.medical_affairs_taxonomy?.ClinicalTrialRelevance || ["Unable to determine"],
+          DiseaseAndTherapeuticArea: parsedResult.medical_affairs_taxonomy?.DiseaseAndTherapeuticArea || ["Unable to determine"],
+          IntendedAudience: parsedResult.medical_affairs_taxonomy?.IntendedAudience || ["Unable to determine"],
+          KeyScientificMessaging: parsedResult.medical_affairs_taxonomy?.KeyScientificMessaging || ["Unable to determine"],
+          DistributionAndAccessControl: parsedResult.medical_affairs_taxonomy?.DistributionAndAccessControl || ["Unable to determine"],
+          ComplianceAndRegulatoryConsiderations: parsedResult.medical_affairs_taxonomy?.ComplianceAndRegulatoryConsiderations || ["Unable to determine"]
         }
       };
     } catch (parseError) {
@@ -171,15 +203,15 @@ Be precise and concise. If you cannot determine any element with confidence, mak
       return {
         title,
         summary,
-        content_taxonomy,
+        content_taxonomy: [content_taxonomy],
         medical_affairs_taxonomy: {
-          ContentType: "Unable to determine",
-          ClinicalTrialRelevance: "Unable to determine",
-          DiseaseAndTherapeuticArea: "Unable to determine",
-          IntendedAudience: "Unable to determine",
-          KeyScientificMessaging: "Unable to determine",
-          DistributionAndAccessControl: "Unable to determine",
-          ComplianceAndRegulatoryConsiderations: "Unable to determine"
+          ContentType: ["Unable to determine"],
+          ClinicalTrialRelevance: ["Unable to determine"],
+          DiseaseAndTherapeuticArea: ["Unable to determine"],
+          IntendedAudience: ["Unable to determine"],
+          KeyScientificMessaging: ["Unable to determine"],
+          DistributionAndAccessControl: ["Unable to determine"],
+          ComplianceAndRegulatoryConsiderations: ["Unable to determine"]
         }
       };
     }
