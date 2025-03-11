@@ -9,15 +9,8 @@ export interface SlideData {
   title: string;
   summary: string;
   content_taxonomy: string[];
-  medical_affairs_taxonomy: {
-    ContentType: string[];
-    ClinicalTrialRelevance: string[];
-    DiseaseAndTherapeuticArea: string[];
-    IntendedAudience: string[];
-    KeyScientificMessaging: string[];
-    DistributionAndAccessControl: string[];
-    ComplianceAndRegulatoryConsiderations: string[];
-  };
+  msl_communication: string;
+  payer_communication: string;
 }
 
 interface ResultsListProps {
@@ -68,7 +61,7 @@ const ResultsList: React.FC<ResultsListProps> = ({ results, onDownloadCSV }) => 
               </div>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-4">
               <div>
                 <h4 className="text-sm font-medium">Summary</h4>
                 <p className="text-sm text-muted-foreground">{result.summary}</p>
@@ -76,40 +69,33 @@ const ResultsList: React.FC<ResultsListProps> = ({ results, onDownloadCSV }) => 
 
               <div>
                 <h4 className="text-sm font-medium">Content Taxonomy</h4>
-                <p className="text-sm text-muted-foreground">{result.content_taxonomy.join(", ")}</p>
+                <div className="flex flex-wrap gap-2 mt-1">
+                  {result.content_taxonomy.map((term, i) => (
+                    <span key={i} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
+                      <Tag className="w-3 h-3 mr-1" />
+                      {term}
+                    </span>
+                  ))}
+                </div>
               </div>
 
               <div>
-                <h4 className="text-sm font-medium">Medical Affairs Taxonomy</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
-                  <div>
-                    <p className="font-medium">Content Type:</p>
-                    <p className="text-muted-foreground">{result.medical_affairs_taxonomy.ContentType.join(", ")}</p>
-                  </div>
-                  <div>
-                    <p className="font-medium">Clinical Trial Relevance:</p>
-                    <p className="text-muted-foreground">{result.medical_affairs_taxonomy.ClinicalTrialRelevance.join(", ")}</p>
-                  </div>
-                  <div>
-                    <p className="font-medium">Disease & Therapeutic Area:</p>
-                    <p className="text-muted-foreground">{result.medical_affairs_taxonomy.DiseaseAndTherapeuticArea.join(", ")}</p>
-                  </div>
-                  <div>
-                    <p className="font-medium">Intended Audience:</p>
-                    <p className="text-muted-foreground">{result.medical_affairs_taxonomy.IntendedAudience.join(", ")}</p>
-                  </div>
-                  <div>
-                    <p className="font-medium">Key Scientific Messaging:</p>
-                    <p className="text-muted-foreground">{result.medical_affairs_taxonomy.KeyScientificMessaging.join(", ")}</p>
-                  </div>
-                  <div>
-                    <p className="font-medium">Distribution & Access Control:</p>
-                    <p className="text-muted-foreground">{result.medical_affairs_taxonomy.DistributionAndAccessControl.join(", ")}</p>
-                  </div>
-                  <div>
-                    <p className="font-medium">Compliance & Regulatory:</p>
-                    <p className="text-muted-foreground">{result.medical_affairs_taxonomy.ComplianceAndRegulatoryConsiderations.join(", ")}</p>
-                  </div>
+                <h4 className="text-sm font-medium">MSL Communication</h4>
+                <div className="mt-1 p-3 bg-secondary/50 rounded-lg">
+                  <p className="text-sm text-muted-foreground flex items-start">
+                    <MessageSquare className="w-4 h-4 mr-2 mt-0.5 text-primary" />
+                    {result.msl_communication}
+                  </p>
+                </div>
+              </div>
+
+              <div>
+                <h4 className="text-sm font-medium">Payer Communication</h4>
+                <div className="mt-1 p-3 bg-secondary/50 rounded-lg">
+                  <p className="text-sm text-muted-foreground flex items-start">
+                    <Users className="w-4 h-4 mr-2 mt-0.5 text-primary" />
+                    {result.payer_communication}
+                  </p>
                 </div>
               </div>
             </div>

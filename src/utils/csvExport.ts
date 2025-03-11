@@ -8,13 +8,8 @@ export function exportToCSV(results: SlideData[]) {
     'Title',
     'Summary',
     'Content Taxonomy',
-    'Content Type',
-    'Clinical Trial Relevance',
-    'Disease & Therapeutic Area',
-    'Intended Audience',
-    'Key Scientific Messaging',
-    'Distribution & Access Control',
-    'Compliance & Regulatory'
+    'MSL Communication',
+    'Payer Communication'
   ];
 
   // Convert results to CSV rows
@@ -24,13 +19,8 @@ export function exportToCSV(results: SlideData[]) {
     result.title,
     result.summary,
     result.content_taxonomy.join('; '),
-    result.medical_affairs_taxonomy.ContentType.join('; '),
-    result.medical_affairs_taxonomy.ClinicalTrialRelevance.join('; '),
-    result.medical_affairs_taxonomy.DiseaseAndTherapeuticArea.join('; '),
-    result.medical_affairs_taxonomy.IntendedAudience.join('; '),
-    result.medical_affairs_taxonomy.KeyScientificMessaging.join('; '),
-    result.medical_affairs_taxonomy.DistributionAndAccessControl.join('; '),
-    result.medical_affairs_taxonomy.ComplianceAndRegulatoryConsiderations.join('; ')
+    result.msl_communication,
+    result.payer_communication
   ]);
 
   // Combine headers and rows

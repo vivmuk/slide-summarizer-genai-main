@@ -158,7 +158,12 @@ ${request.content}`
     
     try {
       // Parse the JSON from the response
-      const parsedResult = JSON.parse(assistantMessage);
+      const cleanedMessage = assistantMessage
+        .replace(/```json\n?/, '') // Remove opening markdown
+        .replace(/```\n?$/, '')    // Remove closing markdown
+        .trim();
+        
+      const parsedResult = JSON.parse(cleanedMessage);
       
       // Helper function to ensure valid taxonomy terms
       const ensureValidTaxonomyTerms = (terms: string[], availableTerms: string[]) => {
