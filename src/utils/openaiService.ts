@@ -114,24 +114,25 @@ export async function analyzeWithOpenAI(
 3. TAXONOMY: Select ALL relevant terms from this specific list that apply to the slide content:
 ${JSON.stringify(request.taxonomyTerms?.content_taxonomy || [], null, 2)}
 
-4. MSL COMMUNICATION: Write a single, concise sentence as an expert MSL would communicate this slide's key message to a healthcare professional (HCP). Focus on clinical relevance and scientific evidence.
+4. MSL COMMUNICATION: Write a specific, evidence-based sentence that an MSL would use to communicate with healthcare professionals about this exact slide content. Focus on clinical implications, disease progression, and patient outcomes. For example: "Clinical studies show that untreated isolated proctitis has a 20-30% risk of proximal disease progression within 5 years, highlighting the importance of early intervention."
 
-5. PAYER COMMUNICATION: Write a single, concise sentence focusing on the economic and value proposition aspects that would be relevant to payers and market access teams.
+5. PAYER COMMUNICATION: Write a specific value proposition sentence for payers focused on this slide's content. Address economic impact, healthcare resource utilization, or cost implications. For example: "Early treatment of isolated proctitis can reduce the risk of disease progression, potentially avoiding costly hospitalizations and the need for advanced therapies."
 
 CRITICAL RULES:
 1. Only use terms from the provided taxonomy list - no variations or new terms
 2. Never return "Unable to determine" - always select appropriate terms
-3. MSL communication should be evidence-based and clinically focused
-4. Payer communication should emphasize value, outcomes, and economic aspects
-5. Keep all communications professional and scientifically accurate
+3. MSL communication must include specific clinical data or evidence when available
+4. Payer communication must include specific economic or healthcare utilization implications
+5. Both communications must be directly relevant to the slide's specific content
+6. Never use generic placeholder messages - each response should be unique to the slide
 
 Format your response as a JSON object:
 {
   "title": "exact slide title",
   "summary": "one-line content summary",
   "content_taxonomy": ["term1", "term2"],
-  "msl_communication": "one-line expert MSL communication to HCP",
-  "payer_communication": "one-line value proposition for payers"
+  "msl_communication": "specific evidence-based communication for HCPs",
+  "payer_communication": "specific value proposition for payers"
 }`
           },
           {
