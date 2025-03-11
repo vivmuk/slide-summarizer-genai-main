@@ -19,15 +19,7 @@ export interface OpenAIAnalysisResponse {
   summary: string;
   content_taxonomy: string[];
   msl_communication: string;
-  medical_affairs_taxonomy: {
-    ContentType: string[];
-    ClinicalTrialRelevance: string[];
-    DiseaseAndTherapeuticArea: string[];
-    IntendedAudience: string[];
-    KeyScientificMessaging: string[];
-    DistributionAndAccessControl: string[];
-    ComplianceAndRegulatoryConsiderations: string[];
-  };
+  payer_communication: string;
 }
 
 export interface OpenAIModel {
@@ -122,34 +114,29 @@ export async function analyzeWithOpenAI(
 3. TAXONOMY: Select ALL relevant terms from this specific list that apply to the slide content:
 ${JSON.stringify(request.taxonomyTerms?.content_taxonomy || [], null, 2)}
 
-4. MSL COMMUNICATION: Write a single, concise sentence explaining how an MSL would communicate this slide's key message to a healthcare professional (HCP).
+4. MSL COMMUNICATION: Write a single, concise sentence as an expert MSL would communicate this slide's key message to a healthcare professional (HCP). Focus on clinical relevance and scientific evidence.
+
+5. PAYER COMMUNICATION: Write a single, concise sentence focusing on the economic and value proposition aspects that would be relevant to payers and market access teams.
 
 CRITICAL RULES:
 1. Only use terms from the provided taxonomy list - no variations or new terms
 2. Never return "Unable to determine" - always select appropriate terms
-3. MSL communication should be professional, evidence-based, and clinically relevant
-4. Focus on scientific accuracy and clinical value in all responses
+3. MSL communication should be evidence-based and clinically focused
+4. Payer communication should emphasize value, outcomes, and economic aspects
+5. Keep all communications professional and scientifically accurate
 
 Format your response as a JSON object:
 {
   "title": "exact slide title",
   "summary": "one-line content summary",
   "content_taxonomy": ["term1", "term2"],
-  "msl_communication": "one-line MSL communication approach",
-  "medical_affairs_taxonomy": {
-    "ContentType": ["Scientific Platform"],
-    "ClinicalTrialRelevance": ["Phase 3 Clinical Trial Data"],
-    "DiseaseAndTherapeuticArea": ["Immunology"],
-    "IntendedAudience": ["Healthcare Professionals (HCPs)"],
-    "KeyScientificMessaging": ["Efficacy Data"],
-    "DistributionAndAccessControl": ["Medical Affairs Internal Repository"],
-    "ComplianceAndRegulatoryConsiderations": ["Medical Affairs Approved"]
-  }
+  "msl_communication": "one-line expert MSL communication to HCP",
+  "payer_communication": "one-line value proposition for payers"
 }`
           },
           {
             role: 'user',
-            content: `Analyze this slide and provide the title, summary, relevant taxonomy terms, and MSL communication approach. Remember to only use terms from the provided taxonomy list:
+            content: `Analyze this slide and provide the title, summary, relevant taxonomy terms, MSL communication, and payer communication. Remember to only use terms from the provided taxonomy list:
 
 ${request.content}`
           }
@@ -199,16 +186,8 @@ ${request.content}`
           parsedResult.content_taxonomy,
           request.taxonomyTerms?.content_taxonomy || []
         ),
-        msl_communication: parsedResult.msl_communication || "Key message: Focus on clinical relevance and evidence-based outcomes",
-        medical_affairs_taxonomy: {
-          ContentType: ["Scientific Platform"],
-          ClinicalTrialRelevance: ["Phase 3 Clinical Trial Data"],
-          DiseaseAndTherapeuticArea: ["Immunology"],
-          IntendedAudience: ["Healthcare Professionals (HCPs)"],
-          KeyScientificMessaging: ["Efficacy Data"],
-          DistributionAndAccessControl: ["Medical Affairs Internal Repository"],
-          ComplianceAndRegulatoryConsiderations: ["Medical Affairs Approved"]
-        }
+        msl_communication: parsedResult.msl_communication || "Clinical evidence demonstrates significant therapeutic potential for addressing unmet needs in isolated proctitis management.",
+        payer_communication: parsedResult.payer_communication || "Treatment approach may reduce disease progression and associated healthcare costs."
       };
       
       return validatedResponse;
@@ -219,22 +198,15 @@ ${request.content}`
       const title = assistantMessage.match(/Title:?\s*(.*?)(?:\n|$)/i)?.[1] || "Title not provided";
       const summary = assistantMessage.match(/Summary:?\s*(.*?)(?:\n|$)/i)?.[1] || "Summary not provided";
       const content_taxonomy = assistantMessage.match(/Taxonomy:?\s*(.*?)(?:\n|$)/i)?.[1] || request.taxonomyTerms?.content_taxonomy?.[0] || "Disease Awareness";
-      const msl_communication = assistantMessage.match(/MSL Communication:?\s*(.*?)(?:\n|$)/i)?.[1] || "Key message: Focus on clinical relevance and evidence-based outcomes";
+      const msl_communication = assistantMessage.match(/MSL Communication:?\s*(.*?)(?:\n|$)/i)?.[1] || "Clinical evidence demonstrates significant therapeutic potential for addressing unmet needs in isolated proctitis management.";
+      const payer_communication = assistantMessage.match(/Payer Communication:?\s*(.*?)(?:\n|$)/i)?.[1] || "Treatment approach may reduce disease progression and associated healthcare costs.";
       
       return {
         title,
         summary,
         content_taxonomy: [content_taxonomy],
         msl_communication,
-        medical_affairs_taxonomy: {
-          ContentType: ["Scientific Platform"],
-          ClinicalTrialRelevance: ["Phase 3 Clinical Trial Data"],
-          DiseaseAndTherapeuticArea: ["Immunology"],
-          IntendedAudience: ["Healthcare Professionals (HCPs)"],
-          KeyScientificMessaging: ["Efficacy Data"],
-          DistributionAndAccessControl: ["Medical Affairs Internal Repository"],
-          ComplianceAndRegulatoryConsiderations: ["Medical Affairs Approved"]
-        }
+        payer_communication
       };
     }
     
