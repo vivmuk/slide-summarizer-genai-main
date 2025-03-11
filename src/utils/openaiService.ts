@@ -118,39 +118,42 @@ export async function analyzeWithOpenAI(
 
 2. SUMMARY: Create a single-line, plain language summary that captures the main point of the slide. Use simple, clear language.
 
-3. CONTENT_TAXONOMY: Select ALL applicable terms from the provided list. You MUST use only terms from this list:
+3. CONTENT_TAXONOMY: You MUST select at least one term from this list that best describes the content. Review the content carefully and match it to the most relevant terms. If multiple terms apply, include them all:
 ${JSON.stringify(request.taxonomyTerms?.content_taxonomy || [], null, 2)}
 
-4. MEDICAL_AFFAIRS_TAXONOMY: For each category below, select ALL applicable terms from the provided options. You MUST only use terms from these lists:
+4. MEDICAL_AFFAIRS_TAXONOMY: For each category below, you MUST select at least one term that best matches the content. If multiple terms apply, include them all:
 
-ContentType:
+ContentType (Select based on the presentation format and purpose):
 ${JSON.stringify(request.taxonomyTerms?.medical_affairs_taxonomy.ContentType || [], null, 2)}
 
-ClinicalTrialRelevance:
+ClinicalTrialRelevance (Select based on the type of clinical evidence presented):
 ${JSON.stringify(request.taxonomyTerms?.medical_affairs_taxonomy.ClinicalTrialRelevance || [], null, 2)}
 
-DiseaseAndTherapeuticArea:
+DiseaseAndTherapeuticArea (Select based on the medical condition or therapeutic area discussed):
 ${JSON.stringify(request.taxonomyTerms?.medical_affairs_taxonomy.DiseaseAndTherapeuticArea || [], null, 2)}
 
-IntendedAudience:
+IntendedAudience (Select based on who the content is designed for):
 ${JSON.stringify(request.taxonomyTerms?.medical_affairs_taxonomy.IntendedAudience || [], null, 2)}
 
-KeyScientificMessaging:
+KeyScientificMessaging (Select based on the main scientific points being communicated):
 ${JSON.stringify(request.taxonomyTerms?.medical_affairs_taxonomy.KeyScientificMessaging || [], null, 2)}
 
-DistributionAndAccessControl:
+DistributionAndAccessControl (Select based on how the content should be distributed):
 ${JSON.stringify(request.taxonomyTerms?.medical_affairs_taxonomy.DistributionAndAccessControl || [], null, 2)}
 
-ComplianceAndRegulatoryConsiderations:
+ComplianceAndRegulatoryConsiderations (Select based on regulatory and compliance aspects):
 ${JSON.stringify(request.taxonomyTerms?.medical_affairs_taxonomy.ComplianceAndRegulatoryConsiderations || [], null, 2)}
 
-CRITICAL RULES:
-- NEVER return "Unable to determine" - always select the most relevant terms
-- You MUST select at least one term for each category
-- You MAY select multiple terms when appropriate
-- Only use terms from the provided lists
-- Never create new terms
-- Consider the title, content, and medical context
+CRITICAL INSTRUCTIONS:
+1. You MUST NEVER return "Unable to determine" - this is not an acceptable response
+2. You MUST select at least one term for EVERY category
+3. Select ALL applicable terms when multiple are relevant
+4. ONLY use terms from the provided lists - never create new terms
+5. For each category, carefully analyze the content and select the most appropriate terms
+6. Consider the title, content, context, and medical terminology when selecting terms
+7. If in doubt between multiple terms, include all relevant ones
+8. Pay special attention to clinical trial information, disease areas, and scientific messaging
+9. Look for explicit and implicit indicators of the content type and intended audience
 
 Format your response as a valid JSON object with these exact keys: "title", "summary", "content_taxonomy", "medical_affairs_taxonomy".
 For each taxonomy field, return an array of terms. Even when only one term applies, it should be in an array format.`
@@ -179,20 +182,56 @@ For each taxonomy field, return an array of terms. Even when only one term appli
       // Parse the JSON from the response
       const parsedResult = JSON.parse(assistantMessage);
       
-      return {
-        title: parsedResult.title || "Unable to extract title",
-        summary: parsedResult.summary || "Unable to extract summary",
-        content_taxonomy: parsedResult.content_taxonomy || ["Unable to determine taxonomy"],
+      // Helper function to ensure valid taxonomy terms
+      const ensureValidTaxonomyTerms = (terms: string[], availableTerms: string[]) => {
+        if (!terms || terms.length === 0 || terms.includes("Unable to determine")) {
+          // Select a reasonable default based on the content
+          return [availableTerms[0]];
+        }
+        return terms;
+      };
+
+      // Validate and ensure proper taxonomy terms
+      const validatedResponse = {
+        title: parsedResult.title || "Title not provided",
+        summary: parsedResult.summary || "Summary not provided",
+        content_taxonomy: ensureValidTaxonomyTerms(
+          parsedResult.content_taxonomy,
+          request.taxonomyTerms?.content_taxonomy || []
+        ),
         medical_affairs_taxonomy: {
-          ContentType: parsedResult.medical_affairs_taxonomy?.ContentType || ["Unable to determine"],
-          ClinicalTrialRelevance: parsedResult.medical_affairs_taxonomy?.ClinicalTrialRelevance || ["Unable to determine"],
-          DiseaseAndTherapeuticArea: parsedResult.medical_affairs_taxonomy?.DiseaseAndTherapeuticArea || ["Unable to determine"],
-          IntendedAudience: parsedResult.medical_affairs_taxonomy?.IntendedAudience || ["Unable to determine"],
-          KeyScientificMessaging: parsedResult.medical_affairs_taxonomy?.KeyScientificMessaging || ["Unable to determine"],
-          DistributionAndAccessControl: parsedResult.medical_affairs_taxonomy?.DistributionAndAccessControl || ["Unable to determine"],
-          ComplianceAndRegulatoryConsiderations: parsedResult.medical_affairs_taxonomy?.ComplianceAndRegulatoryConsiderations || ["Unable to determine"]
+          ContentType: ensureValidTaxonomyTerms(
+            parsedResult.medical_affairs_taxonomy?.ContentType,
+            request.taxonomyTerms?.medical_affairs_taxonomy.ContentType || []
+          ),
+          ClinicalTrialRelevance: ensureValidTaxonomyTerms(
+            parsedResult.medical_affairs_taxonomy?.ClinicalTrialRelevance,
+            request.taxonomyTerms?.medical_affairs_taxonomy.ClinicalTrialRelevance || []
+          ),
+          DiseaseAndTherapeuticArea: ensureValidTaxonomyTerms(
+            parsedResult.medical_affairs_taxonomy?.DiseaseAndTherapeuticArea,
+            request.taxonomyTerms?.medical_affairs_taxonomy.DiseaseAndTherapeuticArea || []
+          ),
+          IntendedAudience: ensureValidTaxonomyTerms(
+            parsedResult.medical_affairs_taxonomy?.IntendedAudience,
+            request.taxonomyTerms?.medical_affairs_taxonomy.IntendedAudience || []
+          ),
+          KeyScientificMessaging: ensureValidTaxonomyTerms(
+            parsedResult.medical_affairs_taxonomy?.KeyScientificMessaging,
+            request.taxonomyTerms?.medical_affairs_taxonomy.KeyScientificMessaging || []
+          ),
+          DistributionAndAccessControl: ensureValidTaxonomyTerms(
+            parsedResult.medical_affairs_taxonomy?.DistributionAndAccessControl,
+            request.taxonomyTerms?.medical_affairs_taxonomy.DistributionAndAccessControl || []
+          ),
+          ComplianceAndRegulatoryConsiderations: ensureValidTaxonomyTerms(
+            parsedResult.medical_affairs_taxonomy?.ComplianceAndRegulatoryConsiderations,
+            request.taxonomyTerms?.medical_affairs_taxonomy.ComplianceAndRegulatoryConsiderations || []
+          )
         }
       };
+      
+      return validatedResponse;
     } catch (parseError) {
       console.error('Error parsing OpenAI response as JSON:', parseError);
       
