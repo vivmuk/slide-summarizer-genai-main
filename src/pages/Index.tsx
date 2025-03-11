@@ -8,6 +8,20 @@ import { exportToCSV } from '@/utils/csvExport';
 import { getAvailableModels, OpenAIModel } from '@/utils/openaiService';
 import { ChevronDown, KeyRound, FileSliders, Database, Download, ExternalLink } from 'lucide-react';
 
+// Define the taxonomy terms interface
+interface TaxonomyTerms {
+  content_taxonomy: string[];
+  medical_affairs_taxonomy: {
+    ContentType: string[];
+    ClinicalTrialRelevance: string[];
+    DiseaseAndTherapeuticArea: string[];
+    IntendedAudience: string[];
+    KeyScientificMessaging: string[];
+    DistributionAndAccessControl: string[];
+    ComplianceAndRegulatoryConsiderations: string[];
+  };
+}
+
 const Index = () => {
   const [files, setFiles] = useState<File[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -19,6 +33,7 @@ const Index = () => {
   const [selectedModel, setSelectedModel] = useState<string>('gpt-4o');
   const [isModelDropdownOpen, setIsModelDropdownOpen] = useState(false);
   const [isLoadingModels, setIsLoadingModels] = useState(false);
+  const [taxonomyTerms, setTaxonomyTerms] = useState<TaxonomyTerms | null>(null);
 
   const handleFilesSelected = (selectedFiles: File[]) => {
     setFiles(prevFiles => [...prevFiles, ...selectedFiles]);
@@ -44,6 +59,15 @@ const Index = () => {
   };
 
   useEffect(() => {
+    // Load taxonomy terms from JSON file
+    fetch('/taxonomy_terms.json')
+      .then(response => response.json())
+      .then(data => setTaxonomyTerms(data))
+      .catch(error => {
+        console.error('Error loading taxonomy terms:', error);
+        toast.error('Failed to load taxonomy terms');
+      });
+
     const savedApiKey = localStorage.getItem('openai-api-key');
     if (savedApiKey) {
       setApiKey(savedApiKey);
@@ -67,6 +91,11 @@ const Index = () => {
       return;
     }
 
+    if (!taxonomyTerms) {
+      toast.error('Taxonomy terms not loaded. Please try again.');
+      return;
+    }
+
     try {
       setIsProcessing(true);
       setProgress(0);
@@ -78,7 +107,8 @@ const Index = () => {
         files, 
         apiKey,
         selectedModel,
-        (progressValue) => setProgress(progressValue)
+        (progressValue) => setProgress(progressValue),
+        taxonomyTerms
       );
       
       if (processedResults && processedResults.length > 0) {

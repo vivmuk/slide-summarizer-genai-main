@@ -1,5 +1,17 @@
 export interface OpenAIAnalysisRequest {
   content: string;
+  taxonomyTerms?: {
+    content_taxonomy: string[];
+    medical_affairs_taxonomy: {
+      ContentType: string[];
+      ClinicalTrialRelevance: string[];
+      DiseaseAndTherapeuticArea: string[];
+      IntendedAudience: string[];
+      KeyScientificMessaging: string[];
+      DistributionAndAccessControl: string[];
+      ComplianceAndRegulatoryConsiderations: string[];
+    };
+  };
 }
 
 export interface OpenAIAnalysisResponse {
@@ -106,53 +118,42 @@ export async function analyzeWithOpenAI(
 
 2. SUMMARY: Create a single-line, plain language summary that captures the main point of the slide. Use simple, clear language.
 
-3. CONTENT_TAXONOMY: Select ALL applicable terms from this list that describe the content types present in the slide. You MUST use only terms from this list:
-[Access, Availability, Brand Awareness and News, Brand Experience, Clinical Trial and Study Info, Clinical Trial Diversity, Clinical Trial Enrollment, Colloquialism, Confirmation, Contractual Terms, Corporate News, Diagnosis, Disease Awareness, Dispense As Written, Dosing, Efficacy, ePermission or Consent or Unsubscribe, Epidemiology, Invitation to Other MCM, Mechanism of Action, Notations, Pathology, Patient Stories, Patient Type, Pfizer Internal Use Only, Product Form Strength Function, Product Label Info, Real World Evidence, Resources HCP, Resources Patient, Safety, Sample, Special Offers and Discounts, Storage and Handling, Summary Messages, Treatment Options, Unmet Need]
+3. CONTENT_TAXONOMY: Select ALL applicable terms from the provided list. You MUST use only terms from this list:
+${JSON.stringify(request.taxonomyTerms?.content_taxonomy || [], null, 2)}
 
-4. MEDICAL_AFFAIRS_TAXONOMY: For each category below, select ALL applicable terms from the provided options that apply to the slide. You MUST only use terms from these lists:
+4. MEDICAL_AFFAIRS_TAXONOMY: For each category below, select ALL applicable terms from the provided options. You MUST only use terms from these lists:
 
-ContentType - Select based on all purposes the slide serves:
-[Scientific Platform, Key Scientific Messages (KSMs), Medical Information Response (MIRs), Plain Language Summary (PLS), Clinical Trial Results Deck, Mechanism of Action (MOA) Deck, Real-World Evidence (RWE) Deck, Health Economics & Outcomes Research (HEOR) Deck, Advisory Board Deck, Regulatory & Labeling Deck]
+ContentType:
+${JSON.stringify(request.taxonomyTerms?.medical_affairs_taxonomy.ContentType || [], null, 2)}
 
-ClinicalTrialRelevance - Select all types of clinical evidence presented:
-[Phase 1 Clinical Trial Data, Phase 2 Clinical Trial Data, Phase 3 Clinical Trial Data, Phase 4/Post-Marketing Surveillance Data, Head-to-Head Trials, Biomarker/Companion Diagnostics Evidence, Meta-Analyses & Systematic Reviews]
+ClinicalTrialRelevance:
+${JSON.stringify(request.taxonomyTerms?.medical_affairs_taxonomy.ClinicalTrialRelevance || [], null, 2)}
 
-DiseaseAndTherapeuticArea - Select all relevant medical conditions:
-[Oncology, Cardiology, Immunology, Neurology, Rare Diseases, Non-Small Cell Lung Cancer, Crohn's Disease, Multiple Sclerosis]
+DiseaseAndTherapeuticArea:
+${JSON.stringify(request.taxonomyTerms?.medical_affairs_taxonomy.DiseaseAndTherapeuticArea || [], null, 2)}
 
-IntendedAudience - Select all target audiences:
-[Internal Medical Affairs, Healthcare Professionals (HCPs), Payers & Market Access Teams, Regulatory & Compliance Teams, Patients & Advocacy Groups]
+IntendedAudience:
+${JSON.stringify(request.taxonomyTerms?.medical_affairs_taxonomy.IntendedAudience || [], null, 2)}
 
-KeyScientificMessaging - Select all scientific messages present:
-[Efficacy Data, Safety & Tolerability Profile, Dosing & Administration Guidelines, Real-World Clinical Outcomes, Unmet Medical Need & Differentiation]
+KeyScientificMessaging:
+${JSON.stringify(request.taxonomyTerms?.medical_affairs_taxonomy.KeyScientificMessaging || [], null, 2)}
 
-DistributionAndAccessControl - Select all appropriate distribution channels:
-[Veeva CRM & MSL Tools, Medical Affairs Internal Repository, Congress Presentations, HCP Portals & Educational Websites, Advisory Board Meetings]
+DistributionAndAccessControl:
+${JSON.stringify(request.taxonomyTerms?.medical_affairs_taxonomy.DistributionAndAccessControl || [], null, 2)}
 
-ComplianceAndRegulatoryConsiderations - Select all applicable compliance statuses:
-[Medical Affairs Approved, Internal Use Only, Market-Specific Adaptations (Regional Variations), Fair Balance Statement, Pre-Approval vs. Post-Approval Use]
+ComplianceAndRegulatoryConsiderations:
+${JSON.stringify(request.taxonomyTerms?.medical_affairs_taxonomy.ComplianceAndRegulatoryConsiderations || [], null, 2)}
 
-IMPORTANT:
+CRITICAL RULES:
+- NEVER return "Unable to determine" - always select the most relevant terms
 - You MUST select at least one term for each category
 - You MAY select multiple terms when appropriate
 - Only use terms from the provided lists
-- Never return "Unable to determine" or create new terms
-- Consider all aspects of the slide's content when selecting terms
-- If uncertain about a category, select the most relevant term(s) based on available content
+- Never create new terms
+- Consider the title, content, and medical context
 
 Format your response as a valid JSON object with these exact keys: "title", "summary", "content_taxonomy", "medical_affairs_taxonomy".
-For each taxonomy field, return an array of terms. Even when only one term applies, it should be in an array format.
-Example format:
-{
-  "title": "Example Title",
-  "summary": "Example summary",
-  "content_taxonomy": ["Term1", "Term2"],
-  "medical_affairs_taxonomy": {
-    "ContentType": ["Term1", "Term2"],
-    "ClinicalTrialRelevance": ["Term1"],
-    ...
-  }
-}`
+For each taxonomy field, return an array of terms. Even when only one term applies, it should be in an array format.`
           },
           {
             role: 'user',

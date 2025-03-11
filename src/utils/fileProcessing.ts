@@ -5,11 +5,26 @@ import * as pdfjs from 'pdfjs-dist';
 // Load the PDF.js worker
 pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
+// Define the taxonomy terms interface
+interface TaxonomyTerms {
+  content_taxonomy: string[];
+  medical_affairs_taxonomy: {
+    ContentType: string[];
+    ClinicalTrialRelevance: string[];
+    DiseaseAndTherapeuticArea: string[];
+    IntendedAudience: string[];
+    KeyScientificMessaging: string[];
+    DistributionAndAccessControl: string[];
+    ComplianceAndRegulatoryConsiderations: string[];
+  };
+}
+
 export async function processFiles(
   files: File[], 
   openaiApiKey: string,
   openaiModel: string,
-  onProgressUpdate: (progress: number) => void
+  onProgressUpdate: (progress: number) => void,
+  taxonomyTerms?: TaxonomyTerms
 ): Promise<SlideData[]> {
   const results: SlideData[] = [];
   let processedFileCount = 0;
@@ -55,7 +70,10 @@ export async function processFiles(
           const analysisResult = await analyzeWithOpenAI(
             openaiApiKey,
             openaiModel,
-            { content: pageContent }
+            { 
+              content: pageContent,
+              taxonomyTerms: taxonomyTerms
+            }
           );
           
           results.push({
@@ -84,15 +102,15 @@ export async function processFiles(
             pageNumber: pageNum,
             title: "Error Processing Page",
             summary: `An error occurred: ${pageError instanceof Error ? pageError.message : String(pageError)}`,
-            content_taxonomy: "Error",
+            content_taxonomy: ["Error"],
             medical_affairs_taxonomy: {
-              ContentType: "Unable to determine",
-              ClinicalTrialRelevance: "Unable to determine",
-              DiseaseAndTherapeuticArea: "Unable to determine",
-              IntendedAudience: "Unable to determine",
-              KeyScientificMessaging: "Unable to determine",
-              DistributionAndAccessControl: "Unable to determine",
-              ComplianceAndRegulatoryConsiderations: "Unable to determine"
+              ContentType: ["Unable to determine"],
+              ClinicalTrialRelevance: ["Unable to determine"],
+              DiseaseAndTherapeuticArea: ["Unable to determine"],
+              IntendedAudience: ["Unable to determine"],
+              KeyScientificMessaging: ["Unable to determine"],
+              DistributionAndAccessControl: ["Unable to determine"],
+              ComplianceAndRegulatoryConsiderations: ["Unable to determine"]
             }
           });
           
@@ -116,15 +134,15 @@ export async function processFiles(
         pageNumber: 1,
         title: "Error Processing File",
         summary: `Could not process this file: ${fileError instanceof Error ? fileError.message : String(fileError)}`,
-        content_taxonomy: "Error",
+        content_taxonomy: ["Error"],
         medical_affairs_taxonomy: {
-          ContentType: "Unable to determine",
-          ClinicalTrialRelevance: "Unable to determine",
-          DiseaseAndTherapeuticArea: "Unable to determine",
-          IntendedAudience: "Unable to determine",
-          KeyScientificMessaging: "Unable to determine",
-          DistributionAndAccessControl: "Unable to determine",
-          ComplianceAndRegulatoryConsiderations: "Unable to determine"
+          ContentType: ["Unable to determine"],
+          ClinicalTrialRelevance: ["Unable to determine"],
+          DiseaseAndTherapeuticArea: ["Unable to determine"],
+          IntendedAudience: ["Unable to determine"],
+          KeyScientificMessaging: ["Unable to determine"],
+          DistributionAndAccessControl: ["Unable to determine"],
+          ComplianceAndRegulatoryConsiderations: ["Unable to determine"]
         }
       });
       

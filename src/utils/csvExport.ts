@@ -23,14 +23,14 @@ export function exportToCSV(results: SlideData[]) {
     result.pageNumber,
     result.title,
     result.summary,
-    result.content_taxonomy,
-    result.medical_affairs_taxonomy.ContentType,
-    result.medical_affairs_taxonomy.ClinicalTrialRelevance,
-    result.medical_affairs_taxonomy.DiseaseAndTherapeuticArea,
-    result.medical_affairs_taxonomy.IntendedAudience,
-    result.medical_affairs_taxonomy.KeyScientificMessaging,
-    result.medical_affairs_taxonomy.DistributionAndAccessControl,
-    result.medical_affairs_taxonomy.ComplianceAndRegulatoryConsiderations
+    result.content_taxonomy.join('; '),
+    result.medical_affairs_taxonomy.ContentType.join('; '),
+    result.medical_affairs_taxonomy.ClinicalTrialRelevance.join('; '),
+    result.medical_affairs_taxonomy.DiseaseAndTherapeuticArea.join('; '),
+    result.medical_affairs_taxonomy.IntendedAudience.join('; '),
+    result.medical_affairs_taxonomy.KeyScientificMessaging.join('; '),
+    result.medical_affairs_taxonomy.DistributionAndAccessControl.join('; '),
+    result.medical_affairs_taxonomy.ComplianceAndRegulatoryConsiderations.join('; ')
   ]);
 
   // Combine headers and rows

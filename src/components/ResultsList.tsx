@@ -8,15 +8,15 @@ export interface SlideData {
   pageNumber: number;
   title: string;
   summary: string;
-  content_taxonomy: string;
+  content_taxonomy: string[];
   medical_affairs_taxonomy: {
-    ContentType: string;
-    ClinicalTrialRelevance: string;
-    DiseaseAndTherapeuticArea: string;
-    IntendedAudience: string;
-    KeyScientificMessaging: string;
-    DistributionAndAccessControl: string;
-    ComplianceAndRegulatoryConsiderations: string;
+    ContentType: string[];
+    ClinicalTrialRelevance: string[];
+    DiseaseAndTherapeuticArea: string[];
+    IntendedAudience: string[];
+    KeyScientificMessaging: string[];
+    DistributionAndAccessControl: string[];
+    ComplianceAndRegulatoryConsiderations: string[];
   };
 }
 
@@ -76,7 +76,7 @@ const ResultsList: React.FC<ResultsListProps> = ({ results, onDownloadCSV }) => 
 
               <div>
                 <h4 className="text-sm font-medium">Content Taxonomy</h4>
-                <p className="text-sm text-muted-foreground">{result.content_taxonomy}</p>
+                <p className="text-sm text-muted-foreground">{result.content_taxonomy.join(", ")}</p>
               </div>
 
               <div>
@@ -84,31 +84,31 @@ const ResultsList: React.FC<ResultsListProps> = ({ results, onDownloadCSV }) => 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
                   <div>
                     <p className="font-medium">Content Type:</p>
-                    <p className="text-muted-foreground">{result.medical_affairs_taxonomy.ContentType}</p>
+                    <p className="text-muted-foreground">{result.medical_affairs_taxonomy.ContentType.join(", ")}</p>
                   </div>
                   <div>
                     <p className="font-medium">Clinical Trial Relevance:</p>
-                    <p className="text-muted-foreground">{result.medical_affairs_taxonomy.ClinicalTrialRelevance}</p>
+                    <p className="text-muted-foreground">{result.medical_affairs_taxonomy.ClinicalTrialRelevance.join(", ")}</p>
                   </div>
                   <div>
                     <p className="font-medium">Disease & Therapeutic Area:</p>
-                    <p className="text-muted-foreground">{result.medical_affairs_taxonomy.DiseaseAndTherapeuticArea}</p>
+                    <p className="text-muted-foreground">{result.medical_affairs_taxonomy.DiseaseAndTherapeuticArea.join(", ")}</p>
                   </div>
                   <div>
                     <p className="font-medium">Intended Audience:</p>
-                    <p className="text-muted-foreground">{result.medical_affairs_taxonomy.IntendedAudience}</p>
+                    <p className="text-muted-foreground">{result.medical_affairs_taxonomy.IntendedAudience.join(", ")}</p>
                   </div>
                   <div>
                     <p className="font-medium">Key Scientific Messaging:</p>
-                    <p className="text-muted-foreground">{result.medical_affairs_taxonomy.KeyScientificMessaging}</p>
+                    <p className="text-muted-foreground">{result.medical_affairs_taxonomy.KeyScientificMessaging.join(", ")}</p>
                   </div>
                   <div>
                     <p className="font-medium">Distribution & Access Control:</p>
-                    <p className="text-muted-foreground">{result.medical_affairs_taxonomy.DistributionAndAccessControl}</p>
+                    <p className="text-muted-foreground">{result.medical_affairs_taxonomy.DistributionAndAccessControl.join(", ")}</p>
                   </div>
                   <div>
                     <p className="font-medium">Compliance & Regulatory:</p>
-                    <p className="text-muted-foreground">{result.medical_affairs_taxonomy.ComplianceAndRegulatoryConsiderations}</p>
+                    <p className="text-muted-foreground">{result.medical_affairs_taxonomy.ComplianceAndRegulatoryConsiderations.join(", ")}</p>
                   </div>
                 </div>
               </div>
