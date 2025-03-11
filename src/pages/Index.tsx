@@ -281,6 +281,7 @@ const Index = () => {
               
               <ResultsList 
                 results={results}
+                onDownloadCSV={handleDownloadCSV}
               />
             </div>
           )}

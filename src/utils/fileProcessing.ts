@@ -1,4 +1,3 @@
-
 import { SlideData } from '@/components/ResultsList';
 import { analyzeWithOpenAI } from './openaiService';
 import * as pdfjs from 'pdfjs-dist';
@@ -65,8 +64,8 @@ export async function processFiles(
             pageNumber: pageNum,
             title: analysisResult.title,
             summary: analysisResult.summary,
-            taxonomy: analysisResult.taxonomy,
-            mslUsage: analysisResult.mslUsage
+            content_taxonomy: analysisResult.content_taxonomy,
+            medical_affairs_taxonomy: analysisResult.medical_affairs_taxonomy
           });
           
           processedPageCount++;
@@ -85,8 +84,16 @@ export async function processFiles(
             pageNumber: pageNum,
             title: "Error Processing Page",
             summary: `An error occurred: ${pageError instanceof Error ? pageError.message : String(pageError)}`,
-            taxonomy: "Error",
-            mslUsage: "Unable to process"
+            content_taxonomy: "Error",
+            medical_affairs_taxonomy: {
+              ContentType: "Unable to determine",
+              ClinicalTrialRelevance: "Unable to determine",
+              DiseaseAndTherapeuticArea: "Unable to determine",
+              IntendedAudience: "Unable to determine",
+              KeyScientificMessaging: "Unable to determine",
+              DistributionAndAccessControl: "Unable to determine",
+              ComplianceAndRegulatoryConsiderations: "Unable to determine"
+            }
           });
           
           processedPageCount++;
@@ -109,8 +116,16 @@ export async function processFiles(
         pageNumber: 1,
         title: "Error Processing File",
         summary: `Could not process this file: ${fileError instanceof Error ? fileError.message : String(fileError)}`,
-        taxonomy: "Error",
-        mslUsage: "Unable to process"
+        content_taxonomy: "Error",
+        medical_affairs_taxonomy: {
+          ContentType: "Unable to determine",
+          ClinicalTrialRelevance: "Unable to determine",
+          DiseaseAndTherapeuticArea: "Unable to determine",
+          IntendedAudience: "Unable to determine",
+          KeyScientificMessaging: "Unable to determine",
+          DistributionAndAccessControl: "Unable to determine",
+          ComplianceAndRegulatoryConsiderations: "Unable to determine"
+        }
       });
       
       processedFileCount++;
